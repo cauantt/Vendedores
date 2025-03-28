@@ -42,42 +42,85 @@ if ($usuarioId > 0) {
     <title>Lista de Pedidos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { text-transform: uppercase; }
-        .sidebar {
-            height: 100vh; position: fixed; top: 0; left: 0; width: 250px; background: #343a40; padding-top: 20px;
-            transition: all 0.3s;
+        body { 
+            text-transform: uppercase;
+            /* Tamanho de fonte padrão */
+            font-size: 16px;
         }
-        .sidebar a { color: white; display: block; padding: 10px; text-decoration: none; }
-        .sidebar a:hover { background: #495057; }
-        .content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
-        .collapsed { margin-left: 0; }
-        .hidden-sidebar { width: 0; overflow: hidden; }
-        .btn-custom { background-color: #007bff; color: white; border: none; }
-        .btn-custom:hover { background-color: #0056b3; }
-        .btn-export { background-color: #28a745; color: white; border: none; }
-        .btn-export:hover { background-color: #218838; }
-        .btn-info { background-color: #17a2b8; color: white; }
-        .btn-info:hover { background-color: #138496; }
-        .btn { text-transform: uppercase; }
-        h2 { text-transform: uppercase; }
-        .btn-back { background-color: #6c757d; color: white; border: none; }
-        .btn-back:hover { background-color: #5a6268; }
+        
+        .btn-custom { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+        }
+        .btn-custom:hover { 
+            background-color: #0056b3; 
+        }
+        .btn-export { 
+            background-color: #28a745; 
+            color: white; 
+            border: none; 
+        }
+        .btn-export:hover { 
+            background-color: #218838; 
+        }
+        .btn-info { 
+            background-color: #17a2b8; 
+            color: white; 
+        }
+        .btn-info:hover { 
+            background-color: #138496; 
+        }
+        .btn { 
+            text-transform: uppercase; 
+        }
+        h2 { 
+            text-transform: uppercase; 
+        }
+        .btn-back { 
+            background-color: #6c757d; 
+            color: white; 
+            border: none; 
+        }
+        .btn-back:hover { 
+            background-color: #5a6268; 
+        }
+        /* Responsividade para dispositivos móveis */
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px; /* Fonte menor para dispositivos móveis */
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+            h2 {
+                font-size: 18px; /* Reduz o tamanho do título */
+                margin-left: 40px;
+                margin-right: ;
+            }
+            .btn {
+                font-size: 9px; /* Botões com fonte menor */
+                padding: 10px 10px; /* Ajuste no padding se necessário */
+            }
+        }
     </style>
 </head>
 <body>
+<?php include 'menu.php'; ?>
     <div class="d-flex">
-    <?php include'sidebar.php' ?>
+      
         <div class="content flex-grow-1">
-            <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
+    
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <button class="btn btn-back" onclick="window.location.href='dashboard.php'">
-                        <i class="bi bi-arrow-left-circle"></i> Voltar para os Clientes
+                        <i class="bi bi-arrow-left-circle"></i> Voltar 
                     </button>
                     <h2>Pedidos de <?php echo htmlspecialchars($usuarioNome); ?></h2>
                     <a href="nova-venda.php?cliente_id=<?= $usuarioId ?>">
-    <button class="btn btn-custom">Criar Nova Venda</button>
-</a>
+                        <button class="btn btn-custom">Nova Venda</button>
+                    </a>
                 </div>
                 <table class="table table-striped">
                     <thead>
@@ -115,9 +158,13 @@ if ($usuarioId > 0) {
     <script>
         function toggleSidebar() {
             let sidebar = document.getElementById("sidebar");
-            let content = document.querySelector(".content");
-            sidebar.classList.toggle("hidden-sidebar");
-            content.classList.toggle("collapsed");
+            // Se for para mobile, alterna a classe active
+            if(window.innerWidth <= 768){
+                sidebar.classList.toggle("active");
+            } else {
+                sidebar.classList.toggle("hidden-sidebar");
+                document.querySelector(".content").classList.toggle("collapsed");
+            }
         }
     </script>
 

@@ -15,18 +15,14 @@ if (isset($_GET['id'])) {
     die("ID do vendedor não especificado.");
 }
 
-// Se o formulário de exclusão for enviado, exclui o vendedor
+// Se o formulário de inativação for enviado, atualiza o status para 'inativo'
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete'])) {
-    // Exclui também a associação na tabela vend_geren
-    $sql_asso = "DELETE FROM vend_geren WHERE vendedor_id = $id";
-    mysqli_query($conn, $sql_asso);
-    
-    $sql = "DELETE FROM usuarios WHERE id = $id";
+    $sql = "UPDATE usuarios SET status = 'inativo' WHERE id = $id";
     if (mysqli_query($conn, $sql)) {
-        header("Location: dashboard.php?msg=deleted");
+        header("Location: dashboard.php?msg=updated");
         exit;
     } else {
-        $error_message = "Erro ao excluir o vendedor: " . mysqli_error($conn);
+        $error_message = "Erro ao inativar o vendedor: " . mysqli_error($conn);
     }
 }
 
@@ -69,30 +65,7 @@ if ($result->num_rows > 0) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <style>
     body { text-transform: uppercase; }
-    .sidebar {
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      background: #343a40;
-      padding-top: 20px;
-      transition: all 0.3s;
-    }
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 10px;
-      text-decoration: none;
-    }
-    .sidebar a:hover { background: #495057; }
-    .content {
-      margin-left: 250px;
-      padding: 20px;
-      transition: all 0.3s;
-    }
-    .collapsed { margin-left: 0; }
-    .hidden-sidebar { width: 0; overflow: hidden; }
+    
     .btn-back {
       background-color: #6c757d;
       color: white;
@@ -106,10 +79,11 @@ if ($result->num_rows > 0) {
   </style>
 </head>
 <body>
+<?php include 'menu.php'; ?>
   <div class="d-flex">
-  <?php include'sidebar.php' ?>
+  
     <div class="content flex-grow-1">
-      <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
+     
       <div class="container mt-4">
         <button class="btn btn-back" onclick="window.location.href='listar-usuarios.php'">
           <i class="bi bi-arrow-left-circle"></i> Voltar para Vendedores
@@ -138,9 +112,9 @@ if ($result->num_rows > 0) {
           <button type="submit" class="btn btn-success">Salvar Alterações</button>
         </form>
 
-        <form method="POST" action="" onsubmit="return confirm('Tem certeza que deseja excluir este vendedor?');" class="mt-3">
+        <form method="POST" action="" onsubmit="return confirm('Tem certeza que deseja inativar este vendedor?');" class="mt-3">
           <button type="submit" name="delete" class="btn btn-danger">
-            <i class="bi bi-trash"></i> Excluir Vendedor
+            <i class="bi bi-trash"></i> Inativar Vendedor
           </button>
         </form>
       </div>

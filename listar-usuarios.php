@@ -35,26 +35,7 @@ $result = $conn->query($sql);
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <style>
     body { text-transform: uppercase; }
-    .sidebar {
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      background: #343a40;
-      padding-top: 20px;
-      transition: all 0.3s;
-    }
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 10px;
-      text-decoration: none;
-    }
-    .sidebar a:hover { background: #495057; }
-    .content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
-    .collapsed { margin-left: 0; }
-    .hidden-sidebar { width: 0; overflow: hidden; }
+    
     .btn-back {
       background-color: #6c757d;
       color: white;
@@ -65,18 +46,32 @@ $result = $conn->query($sql);
       margin-bottom: 15px;
     }
     .btn-back:hover { background-color: #5a6268; }
+    
+    .btn-add {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+    .btn-add:hover { background-color: #218838; }
   </style>
 </head>
 <body>
+<?php include 'menu.php'; ?>
   <div class="d-flex">
-  <?php include'sidebar.php' ?>
+
     <div class="content flex-grow-1">
-      <!-- Botão para alternar a sidebar -->
-      <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
       <div class="container mt-4">
         <button class="btn btn-back" onclick="window.location.href='dashboard.php'">
           <i class="bi bi-arrow-left-circle"></i> Voltar
         </button>
+        <button class="btn btn-add" onclick="window.location.href='novo-vendedor.php'">
+          <i class="bi bi-plus-circle"></i> Cadastrar Vendedor
+        </button>
+        
         <h2 class="mb-4">Listar Vendedores</h2>
         
         <?php if ($result && $result->num_rows > 0): ?>
@@ -112,15 +107,6 @@ $result = $conn->query($sql);
       </div>
     </div>
   </div>
-  
-  <script>
-    function toggleSidebar() {
-      let sidebar = document.getElementById("sidebar");
-      let content = document.querySelector(".content");
-      sidebar.classList.toggle("hidden-sidebar");
-      content.classList.toggle("collapsed");
-    }
-  </script>
   
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

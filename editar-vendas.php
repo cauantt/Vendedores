@@ -117,54 +117,18 @@ $resultProdutos = mysqli_query($conn, $sqlProdutos);
         body {
             text-transform: uppercase;
         }
-        .sidebar {
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            background: #343a40;
-            padding-top: 20px;
-            transition: all 0.3s;
-        }
-        .sidebar a {
-            color: white;
-            display: block;
-            padding: 10px;
-            text-decoration: none;
-        }
-        .sidebar a:hover {
-            background: #495057;
-        }
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: all 0.3s;
-        }
-        .collapsed {
-            margin-left: 0;
-        }
-        .hidden-sidebar {
-            width: 0;
-            overflow: hidden;
-        }
+        
         .form-control, .form-select, textarea {
             margin-bottom: 1.5rem;
         }
     </style>
 </head>
 <body>
+    <?php include'menu.php'  ?>
 <div class="d-flex">
-    <div id="sidebar" class="sidebar">
-        <a href="dashboard.php">Listar vendas</a>
-        <a href="nova-venda.php">Fazer pedido</a>
-        <a href="listar-produtos.php">Listar produtos</a>
-        <a href="cadastrar-produto.php">Cadastrar produtos</a>
-        <a href="listar-clientes.php">Listar clientes</a>
-        <a href="novo-cliente.php">Cadastrar clientes</a>
-    </div>
+    
     <div class="content flex-grow-1">
-        <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
+        
         <div class="container mt-4">
         <button class="btn btn-secondary mb-3" onclick="window.location.href='listar-pedidos.php?id=<?= $clienteId ?>'">
                 <i class="bi bi-arrow-left-circle"></i> Voltar para os Pedidos

@@ -11,31 +11,35 @@ if (!isset($_SESSION['role']) || !isset($_SESSION['id'])) {
 $role = $_SESSION['role'];
 $user_id = $_SESSION['id'];
 
+// Define o cabeçalho conforme a role
+if ($role == 'vendedor') {
+    $header = "Meus Clientes";
+} else if ($role == 'gerente') {
+    $header = "Clientes da Minha Equipe";
+} else if ($role == 'admin') {
+    $header = "Todos os Clientes";
+} else {
+    $header = "Clientes";
+}
+
 // Define a consulta SQL conforme a role
 if ($role == 'vendedor') {
-    // Vendedor vê apenas seus clientes
-    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo 
-            FROM clientes 
-            WHERE vendedor = '$user_id'";
+    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo FROM clientes WHERE vendedor = '$user_id'";
 } else if ($role == 'gerente') {
-    // Gerente vê os clientes dos vendedores que ele gerencia
     $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo 
             FROM clientes 
-            WHERE vendedor IN (
-                SELECT vendedor_id FROM vend_geren WHERE gerente_id = '$user_id'
-            )";
+            WHERE vendedor IN (SELECT vendedor_id FROM vend_geren WHERE gerente_id = '$user_id')";
 } else if ($role == 'admin') {
-    // Admin vê todos os clientes
-    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo 
-            FROM clientes";
+    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo FROM clientes";
 } else {
-    // Caso nenhuma role compatível, pode ser definida uma query padrão ou redirecionar
     $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo FROM clientes";
 }
 
 $result = $conn->query($sql);
+if (!$result) {
+    die("Erro na consulta SQL: " . $conn->error);
+}
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -43,110 +47,64 @@ $result = $conn->query($sql);
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Listar Clientes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    /* Aplica o texto em CAPSLOCK em toda a página */
     body {
       text-transform: uppercase;
     }
-    .sidebar {
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      background: #343a40;
-      padding-top: 20px;
-      transition: all 0.3s;
-    }
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 10px;
-      text-decoration: none;
-    }
-    .sidebar a:hover {
-      background: #495057;
-    }
-    .content {
-      margin-left: 250px;
-      padding: 20px;
-      transition: all 0.3s;
-    }
-    .collapsed {
-      margin-left: 0;
-    }
-    .hidden-sidebar {
-      width: 0;
-      overflow: hidden;
-    }
-    .table tr {
+    .card {
       cursor: pointer;
+      transition: transform 0.2s ease-in-out;
     }
-    .input-group-text, .form-control, .btn {
-      text-transform: uppercase;
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .ellipsis {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <div class="d-flex">
-    <?php include 'sidebar.php'; ?>
-    <div class="content flex-grow-1">
-      <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="novo-cliente.php">
-          <button class="btn btn-success">Cadastrar Novo Cliente</button>
-        </a>
-        <div class="input-group w-50">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input type="text" class="form-control" placeholder="Pesquisar usuário...">
-        </div>
-      </div>
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>NOME</th>
-            <th>CPF/CNPJ</th>
-            <th>EMAIL</th>
-            <th>FONE FIXO</th>
-            <th>AÇÕES</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-            if ($result && $result->num_rows > 0) {
-                while($row = $result->fetch_assoc()) {
-                    echo "<tr onclick=\"redirectToOrders('".$row['id']."')\">";
-                    echo "<td>" . $row['nome_completo'] . "</td>";
-                    echo "<td>" . $row['cpf_cnpj'] . "</td>";
-                    echo "<td>" . $row['email'] . "</td>";
-                    echo "<td>" . $row['fonefixo'] . "</td>";
-                    echo "<td><a href='editar-cliente.php?id=" . $row['id'] . "' class='btn btn-warning btn-sm' onclick='event.stopPropagation();'>Editar</a></td>";
-                    echo "</tr>";
-                }
-            } else {
-                echo "<tr><td colspan='5'>Nenhum cliente encontrado.</td></tr>";
-            }
-            $conn->close();
-          ?>
-        </tbody>
-      </table>
+<?php include 'menu.php'; ?>
+<div class="container mt-4">
+  <h2 class="mb-4"><?= $header; ?></h2>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="novo-cliente.php" class="btn btn-success">Cadastrar Novo Cliente</a>
+    <div class="input-group w-50">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="text" class="form-control" placeholder="Pesquisar usuário...">
     </div>
   </div>
-
-  <script>
-    function toggleSidebar() {
-      let sidebar = document.getElementById("sidebar");
-      let content = document.querySelector(".content");
-      sidebar.classList.toggle("hidden-sidebar");
-      content.classList.toggle("collapsed");
-    }
-    function redirectToOrders(id) {
-      // Redireciona para a página de pedidos passando o id do cliente como parâmetro
-      window.location.href = `listar-pedidos.php?id=${encodeURIComponent(id)}`;
-    }
-  </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <div class="row">
+    <?php if ($result && $result->num_rows > 0): ?>
+      <?php while ($row = $result->fetch_assoc()): ?>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card shadow-sm" onclick="redirectToOrders('<?= $row['id'] ?>')">
+            <div class="card-body">
+              <h5 class="card-title"><?= htmlspecialchars($row['nome_completo']) ?></h5>
+              <p class="card-text"><strong>CPF/CNPJ:</strong> <span class="ellipsis"><?= htmlspecialchars($row['cpf_cnpj']) ?></span></p>
+              <p class="card-text"><strong>Email:</strong> <span class="ellipsis"><?= htmlspecialchars($row['email']) ?></span></p>
+              <p class="card-text"><strong>Fone:</strong> <?= htmlspecialchars($row['fonefixo']) ?></p>
+              <a href="editar-cliente.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm" onclick="event.stopPropagation();">Editar</a>
+            </div>
+          </div>
+        </div>
+      <?php endwhile; ?>
+    <?php else: ?>
+      <p class="text-center">Nenhum cliente encontrado.</p>
+    <?php endif; ?>
+    <?php $conn->close(); ?>
+  </div>
+</div>
+<script>
+  function redirectToOrders(id) {
+    window.location.href = `listar-pedidos.php?id=${encodeURIComponent(id)}`;
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

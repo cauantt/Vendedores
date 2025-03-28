@@ -37,43 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             text-transform: uppercase;
         }
 
-        .sidebar {
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            background: #343a40;
-            padding-top: 20px;
-            transition: all 0.3s;
-        }
-
-        .sidebar a {
-            color: white;
-            display: block;
-            padding: 10px;
-            text-decoration: none;
-        }
-
-        .sidebar a:hover {
-            background: #495057;
-        }
-
-        .content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: all 0.3s;
-        }
-
-        .collapsed {
-            margin-left: 0;
-        }
-
-        .hidden-sidebar {
-            width: 0;
-            overflow: hidden;
-        }
-
         /* Botões com cores normais */
         .btn-custom {
             background-color: #a2d2ff;
@@ -114,10 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </style>
 </head>
 <body>
+<?php include'menu.php' ?>
     <div class="d-flex">
-    <?php include'sidebar.php' ?>
+    
         <div class="content flex-grow-1">
-            <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
+  
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Cadastrar Produto</h2>

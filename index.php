@@ -6,24 +6,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $cpf = $_POST['cpf'];
     $senha = $_POST['password'];
 
-    $sql = "SELECT * FROM usuarios WHERE cpf = '$cpf' AND senha = '$senha'";
+    // Busca o usuário apenas pelo CPF
+    $sql = "SELECT * FROM usuarios WHERE cpf = '$cpf'";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
         $usuario = $result->fetch_assoc();
-        $_SESSION['usuario'] = $cpf;
-        $_SESSION['id'] = $usuario['id'];
-        $_SESSION['role'] = $usuario['role']; // Salvando a role do usuário
 
-        header('Location: dashboard.php');
-        exit();
+        // Verifica se a senha está correta (assumindo que a senha foi armazenada com hash)
+        if (password_verify($senha, $usuario['senha'])) {
+            // Verifica se o status do usuário é 'ativo'
+            if ($usuario['status'] === 'ativo') {
+                $_SESSION['usuario'] = $cpf;
+                $_SESSION['id'] = $usuario['id'];
+                $_SESSION['role'] = $usuario['role']; // Salvando a role do usuário
+
+                header('Location: dashboard.php');
+                exit();
+            } else {
+                $erro = "Usuário inativo. Contate o administrador.";
+            }
+        } else {
+            $erro = "CPF ou senha inválidos!";
+        }
     } else {
         $erro = "CPF ou senha inválidos!";
     }
 }
 ?>
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

@@ -1,8 +1,8 @@
 <?php
 // Definindo as credenciais de conexão
-$host = '127.0.0.1:3308';
+$host = '127.0.0.1:3306';
 $usuario = 'root';
-$senha = 'root';
+$senha = '';
 $banco_de_dados = 'pedidos';
 
 // Criando a conexão
