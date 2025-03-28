@@ -66,13 +66,7 @@ if ($usuarioId > 0) {
 </head>
 <body>
     <div class="d-flex">
-        <div id="sidebar" class="sidebar">
-            <a href="dashboard.php">Listar clientes</a>
-            <a href="novo-cliente.php">Cadastrar cliente</a>
-            <a href="listar-produtos.php">Listar produtos</a>
-            <a href="cadastrar-produto.php">Cadastrar produtos</a>
-            <a href="nova-venda.php">Fazer pedido</a>
-        </div>
+    <?php include'sidebar.php' ?>
         <div class="content flex-grow-1">
             <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
             <div class="container mt-4">

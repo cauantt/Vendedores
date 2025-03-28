@@ -1,7 +1,13 @@
 <?php
+session_start(); // Inicia a sessão (certifique-se que a sessão está sendo iniciada antes de usar $_SESSION)
+
 include 'conec.php'; // Incluindo a conexão com o banco de dados
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Recupera o id do vendedor logado a partir da sessão
+    // Ajuste conforme sua lógica de sessão (exemplo: $_SESSION['id'] ou $_SESSION['vendedor_id'])
+    $vendedor = $_SESSION['id']; 
+
     $nome_completo = $_POST['nome_completo'];
     $cpf_cnpj = $_POST['cpf_cnpj'];
     $rg = $_POST['rg'];
@@ -16,8 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $cidade_entrega = $_POST['cidade_entrega'];
 
     if (!empty($nome_completo) && !empty($cpf_cnpj) && !empty($email)) {
-        $sql = "INSERT INTO clientes (nome_completo, cpf_cnpj, rg, fonefixo, email, fazenda, endereco_cobranca, rua_cobranca, cidade_cobranca, endereco_entrega, rua_entrega, cidade_entrega) 
-                VALUES ('$nome_completo', '$cpf_cnpj', '$rg', '$fonefixo', '$email', '$fazenda', '$endereco_cobranca', '$rua_cobranca', '$cidade_cobranca', '$endereco_entrega', '$rua_entrega', '$cidade_entrega')";
+        // Inclua o campo vendedor na lista de colunas e passe o id do vendedor logado
+        $sql = "INSERT INTO clientes (nome_completo, cpf_cnpj, rg, fonefixo, email, fazenda, 
+                endereco_cobranca, rua_cobranca, cidade_cobranca, endereco_entrega, rua_entrega, cidade_entrega, vendedor) 
+                VALUES ('$nome_completo', '$cpf_cnpj', '$rg', '$fonefixo', '$email', '$fazenda', 
+                '$endereco_cobranca', '$rua_cobranca', '$cidade_cobranca', '$endereco_entrega', '$rua_entrega', '$cidade_entrega', '$vendedor')";
         
         if (mysqli_query($conn, $sql)) {
             $success_message = "Cliente cadastrado com sucesso!";
@@ -29,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -60,43 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     .content { margin-left: 250px; padding: 20px; transition: all 0.3s; }
     .collapsed { margin-left: 0; }
     .hidden-sidebar { width: 0; overflow: hidden; }
-  </style>
-    <style>
-    /* Aplica o texto em CAPSLOCK em toda a página */
-    body {
-      text-transform: uppercase;
-    }
-    .sidebar {
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      background: #343a40;
-      padding-top: 20px;
-      transition: all 0.3s;
-    }
-    .sidebar a {
-      color: white;
-      display: block;
-      padding: 10px;
-      text-decoration: none;
-    }
-    .sidebar a:hover {
-      background: #495057;
-    }
-    .content {
-      margin-left: 250px;
-      padding: 20px;
-      transition: all 0.3s;
-    }
-    .collapsed {
-      margin-left: 0;
-    }
-    .hidden-sidebar {
-      width: 0;
-      overflow: hidden;
-    }
     .btn-back {
       background-color: #6c757d;
       color: white;
@@ -106,20 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       text-transform: uppercase;
       margin-bottom: 15px;
     }
-    .btn-back:hover {
-      background-color: #5a6268;
-    }
-</style>
+    .btn-back:hover { background-color: #5a6268; }
+  </style>
 </head>
 <body>
   <div class="d-flex">
-    <div id="sidebar" class="sidebar">
-      <a href="dashboard.php">Listar clientes</a>
-      <a href="novo-cliente.php">Cadastrar cliente</a>
-      <a href="listar-produtos.php">Listar produtos</a>
-      <a href="cadastrar-produto.php">Cadastrar produtos</a>
-      <a href="nova-venda.php">Fazer pedido</a>
-    </div>
+  <?php include'sidebar.php' ?>
     <div class="content flex-grow-1">
       <!-- Botão para alternar a sidebar -->
       <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>

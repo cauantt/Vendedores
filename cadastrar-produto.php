@@ -115,19 +115,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <div class="d-flex">
-    <div id="sidebar" class="sidebar">
-            <a href="dashboard.php">Listar clientes</a>
-            <a href="novo-cliente.php">Cadastrar cliente</a>
-            <a href="listar-produtos.php">Listar produtos</a>
-            <a href="cadastrar-produto.php">Cadastrar produtos</a>
-            <a href="nova-venda.php">Fazer pedido</a>
-        </div>
+    <?php include'sidebar.php' ?>
         <div class="content flex-grow-1">
             <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
             <div class="container mt-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2>Cadastrar Produto</h2>
-                    <a href="produtos.html" class="btn btn-back">Voltar</a>
+                    <a href="listar-produtos.php" class="btn btn-back">Voltar</a>
                 </div>
                 <form method="POST" action="cadastrar-produto.php">
                     <div class="mb-3">

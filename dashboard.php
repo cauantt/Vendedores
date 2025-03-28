@@ -1,5 +1,39 @@
 <?php 
-include 'conec.php'; 
+session_start();
+include 'conec.php';
+
+// Verifica se o usuário está logado
+if (!isset($_SESSION['role']) || !isset($_SESSION['id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+$role = $_SESSION['role'];
+$user_id = $_SESSION['id'];
+
+// Define a consulta SQL conforme a role
+if ($role == 'vendedor') {
+    // Vendedor vê apenas seus clientes
+    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo 
+            FROM clientes 
+            WHERE vendedor = '$user_id'";
+} else if ($role == 'gerente') {
+    // Gerente vê os clientes dos vendedores que ele gerencia
+    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo 
+            FROM clientes 
+            WHERE vendedor IN (
+                SELECT vendedor_id FROM vend_geren WHERE gerente_id = '$user_id'
+            )";
+} else if ($role == 'admin') {
+    // Admin vê todos os clientes
+    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo 
+            FROM clientes";
+} else {
+    // Caso nenhuma role compatível, pode ser definida uma query padrão ou redirecionar
+    $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo FROM clientes";
+}
+
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -55,17 +89,13 @@ include 'conec.php';
 </head>
 <body>
   <div class="d-flex">
-    <div id="sidebar" class="sidebar">
-      <a href="dashboard.php">Listar clientes</a>
-      <a href="novo-cliente.php">Cadastrar cliente</a>
-      <a href="listar-produtos.php">Listar produtos</a>
-      <a href="cadastrar-produto.php">Cadastrar produtos</a>
-      <a href="nova-venda.php">Fazer pedido</a>
-    </div>
+    <?php include 'sidebar.php'; ?>
     <div class="content flex-grow-1">
       <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <a href="novo-cliente.php"><button class="btn btn-success">Cadastrar Novo Cliente</button></a>
+        <a href="novo-cliente.php">
+          <button class="btn btn-success">Cadastrar Novo Cliente</button>
+        </a>
         <div class="input-group w-50">
           <span class="input-group-text"><i class="bi bi-search"></i></span>
           <input type="text" class="form-control" placeholder="Pesquisar usuário...">
@@ -74,22 +104,16 @@ include 'conec.php';
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>Nome</th>
+            <th>NOME</th>
             <th>CPF/CNPJ</th>
-            <th>Email</th>
+            <th>EMAIL</th>
             <th>FONE FIXO</th>
             <th>AÇÕES</th>
           </tr>
         </thead>
         <tbody>
           <?php
-            // Consulta SQL para pegar os clientes do banco de dados, incluindo o id
-            $sql = "SELECT id, nome_completo, cpf_cnpj, email, fonefixo FROM clientes";
-            $result = $conn->query($sql);
-
-            // Verifica se existem resultados
-            if ($result->num_rows > 0) {
-                // Exibe cada linha de resultado
+            if ($result && $result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr onclick=\"redirectToOrders('".$row['id']."')\">";
                     echo "<td>" . $row['nome_completo'] . "</td>";

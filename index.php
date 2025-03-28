@@ -10,9 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
-        $usuario = $result->fetch_assoc(); // Adicionado esta linha
+        $usuario = $result->fetch_assoc();
         $_SESSION['usuario'] = $cpf;
-        $_SESSION['id'] = $usuario['id']; // Corrigido aqui
+        $_SESSION['id'] = $usuario['id'];
+        $_SESSION['role'] = $usuario['role']; // Salvando a role do usuário
+
         header('Location: dashboard.php');
         exit();
     } else {
@@ -20,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-br">

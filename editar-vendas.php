@@ -8,38 +8,74 @@ if (isset($_GET['id'])) {
     die("ID da venda não especificado.");
 }
 
-// Se o formulário de exclusão for enviado, exclui a venda
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete'])) {
-    $sql = "DELETE FROM vendas WHERE id = $vendaId";
-    if (mysqli_query($conn, $sql)) {
-        header("Location: dashboard.php?msg=deleted");
-        exit;
-    } else {
-        $error_message = "Erro ao excluir a venda: " . mysqli_error($conn);
-    }
+// Obtém a observação da venda
+$sqlObservacao = "SELECT observacao FROM vendas WHERE id = $vendaId";
+$resultObservacao = mysqli_query($conn, $sqlObservacao);
+$observacao = "";
+if ($row = mysqli_fetch_assoc($resultObservacao)) {
+    $observacao = $row['observacao'];
 }
 
-// Se o formulário de atualização for enviado, atualiza os dados
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['delete'])) {
-    $cliente_id = $_POST['cliente_id'];
-    $observacao = $_POST['observacao'];
-    $valor = $_POST['valor'];
+// Obtém o ID do cliente antes de deletar a venda ou atualizar (caso seja necessário redirecionar)
+$sqlCliente = "SELECT cliente_id FROM vendas WHERE id = ?";
+$stmtCliente = mysqli_prepare($conn, $sqlCliente);
+mysqli_stmt_bind_param($stmtCliente, "i", $vendaId);
+mysqli_stmt_execute($stmtCliente);
+mysqli_stmt_bind_result($stmtCliente, $clienteId);
+mysqli_stmt_fetch($stmtCliente);
+mysqli_stmt_close($stmtCliente);
 
-    // Atualiza os dados da venda na tabela
-    $sql = "UPDATE vendas SET 
-                cliente_id = '$cliente_id',
-                observacao = '$observacao',
-                valor = '$valor'
-            WHERE id = $vendaId";
+// Verifica se foi enviada a requisição para atualizar a venda
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update'])) {
+    // Recebe os valores do formulário
+    $valorInput = $_POST['valor'];
+    $observacaoInput = $_POST['observacao'];
 
-    if (mysqli_query($conn, $sql)) {
-        $success_message = "Venda atualizada com sucesso!";
-    } else {
-        $error_message = "Erro ao atualizar a venda: " . mysqli_error($conn);
-    }
+    // Converte o valor recebido (formato "1.234,56" ou "R$ 1.234,56") para float
+    $valorClean = str_replace(['R$', '.'], '', $valorInput); // remove "R$" e pontos
+    $valorClean = str_replace(',', '.', $valorClean); // troca a vírgula pelo ponto
+    $valorFloat = (float) $valorClean;
+
+    // Prepara a query de atualização
+    $sqlUpdate = "UPDATE vendas SET valor = ?, observacao = ? WHERE id = ?";
+    $stmtUpdate = mysqli_prepare($conn, $sqlUpdate);
+    mysqli_stmt_bind_param($stmtUpdate, "dsi", $valorFloat, $observacaoInput, $vendaId);
+    mysqli_stmt_execute($stmtUpdate);
+    $affectedRowsUpdate = mysqli_stmt_affected_rows($stmtUpdate);
+    mysqli_stmt_close($stmtUpdate);
+
+    if ($affectedRowsUpdate > 0) {
+        // Redireciona para o dashboard com mensagem de sucesso
+        header("Location: listar-pedidos.php?id=$clienteId");
+        exit();
+    } 
 }
 
-// Consulta para buscar os dados da venda
+// Verifica se foi enviada a requisição para deletar a venda
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete'])) {
+    // Deleta os produtos associados à venda para evitar problemas de chave estrangeira
+    $sqlDeleteProdutos = "DELETE FROM venda_produtos WHERE venda_id = ?";
+    $stmtProdutos = mysqli_prepare($conn, $sqlDeleteProdutos);
+    mysqli_stmt_bind_param($stmtProdutos, "i", $vendaId);
+    mysqli_stmt_execute($stmtProdutos);
+    mysqli_stmt_close($stmtProdutos);
+
+    // Deleta a venda
+    $sqlDeleteVenda = "DELETE FROM vendas WHERE id = ?";
+    $stmtVenda = mysqli_prepare($conn, $sqlDeleteVenda);
+    mysqli_stmt_bind_param($stmtVenda, "i", $vendaId);
+    mysqli_stmt_execute($stmtVenda);
+    $affectedRows = mysqli_stmt_affected_rows($stmtVenda);
+    mysqli_stmt_close($stmtVenda);
+
+    if ($affectedRows > 0) {
+        // Redireciona para a página de listar pedidos do cliente
+        header("Location: listar-pedidos.php?id=$clienteId");
+        exit();
+    }  
+}
+
+// Consulta para buscar os dados da venda (após update, se houver, esta consulta buscará os dados atualizados)
 $sql = "SELECT * FROM vendas WHERE id = $vendaId";
 $result = mysqli_query($conn, $sql);
 if ($result->num_rows > 0) {
@@ -48,18 +84,16 @@ if ($result->num_rows > 0) {
     die("Venda não encontrada.");
 }
 
-// Convertendo o valor para um número float antes de formatá-lo
-$valor = str_replace(['R$', '.'], '', $venda['valor']); // Remove "R$" e "." (se houver)
-$valor = str_replace(',', '.', $valor); // Troca a vírgula por ponto
-$valor = (float) $valor; // Converte para float
-
-// Agora aplica o number_format
+// Converte o valor para float e formata para exibição (considerando que o valor vem formatado)
+$valor = str_replace(['R$', '.'], '', $venda['valor']);
+$valor = str_replace(',', '.', $valor);
+$valor = (float) $valor;
 $valorFormatado = number_format($valor, 2, ',', '.');
 
-// Formata a data (considerando que data_venda está no formato 'Y-m-d')
+// Formata a data da venda
 $dataVenda = date("d/m/Y", strtotime($venda['data_venda']));
 
-// Consulta para listar os clientes
+// Consulta para listar os clientes (caso necessário para exibição)
 $sqlClientes = "SELECT id, nome_completo FROM clientes";
 $resultClientes = mysqli_query($conn, $sqlClientes);
 
@@ -132,8 +166,8 @@ $resultProdutos = mysqli_query($conn, $sqlProdutos);
     <div class="content flex-grow-1">
         <button class="btn btn-primary mb-3" onclick="toggleSidebar()">☰</button>
         <div class="container mt-4">
-            <button class="btn btn-secondary mb-3" onclick="window.location.href='dashboard.php'">
-                <i class="bi bi-arrow-left-circle"></i> Voltar para o Dashboard
+        <button class="btn btn-secondary mb-3" onclick="window.location.href='listar-pedidos.php?id=<?= $clienteId ?>'">
+                <i class="bi bi-arrow-left-circle"></i> Voltar para os Pedidos
             </button>
             
             <h2 class="mb-4">Editar Venda</h2>
@@ -146,40 +180,31 @@ $resultProdutos = mysqli_query($conn, $sqlProdutos);
 
             <!-- Formulário de Atualização -->
             <form method="POST" action="">
-
                 <div class="row mb-3">
                     <div class="col-md-6">
-    <label for="cliente_id" class="form-label">Cliente</label>
-    <!-- Exibe o nome do cliente dentro de uma caixa -->
-    <?php
-    // Busca o nome do cliente a partir do cliente_id da venda
-    $clienteSql = "SELECT nome_completo FROM clientes WHERE id = " . $venda['cliente_id'];
-    $clienteResult = mysqli_query($conn, $clienteSql);
-    $cliente = mysqli_fetch_assoc($clienteResult);
-    ?>
-    <input type="text" class="form-control" value="<?= $cliente['nome_completo']; ?>" readonly>
-</div>
-<div class="col-md-6">
-    <label for="vendedor_id" class="form-label">Vendedor</label>
-    <?php
-    // Busca o vendedor_id da venda
-    $vendaSql = "SELECT vendedor_id FROM vendas WHERE id = $vendaId"; // Assumindo que a variável $vendaId contém o ID da venda
-    $vendaResult = mysqli_query($conn, $vendaSql);
-    $venda = mysqli_fetch_assoc($vendaResult);
-
-    // Agora, pega o nome do vendedor a partir do vendedor_id
-    $vendedorId = $venda['vendedor_id'];
-    $vendedorSql = "SELECT nome FROM usuarios WHERE id = $vendedorId";
-    $vendedorResult = mysqli_query($conn, $vendedorSql);
-    $vendedor = mysqli_fetch_assoc($vendedorResult);
-    ?>
-    <input type="text" class="form-control" value="<?= $vendedor['nome']; ?>" readonly>
-</div>
-
-
-
-
-                    
+                        <label for="cliente_id" class="form-label">Cliente</label>
+                        <!-- Exibe o nome do cliente em uma caixa -->
+                        <?php
+                        $clienteSql = "SELECT nome_completo FROM clientes WHERE id = " . $venda['cliente_id'];
+                        $clienteResult = mysqli_query($conn, $clienteSql);
+                        $cliente = mysqli_fetch_assoc($clienteResult);
+                        ?>
+                        <input type="text" class="form-control" value="<?= $cliente['nome_completo']; ?>" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="vendedor_id" class="form-label">Vendedor</label>
+                        <?php
+                        // Busca o vendedor a partir do id da venda
+                        $vendaSql = "SELECT vendedor_id FROM vendas WHERE id = $vendaId";
+                        $vendaResult = mysqli_query($conn, $vendaSql);
+                        $vendaRow = mysqli_fetch_assoc($vendaResult);
+                        $vendedorId = $vendaRow['vendedor_id'];
+                        $vendedorSql = "SELECT nome FROM usuarios WHERE id = $vendedorId";
+                        $vendedorResult = mysqli_query($conn, $vendedorSql);
+                        $vendedor = mysqli_fetch_assoc($vendedorResult);
+                        ?>
+                        <input type="text" class="form-control" value="<?= $vendedor['nome']; ?>" readonly>
+                    </div>
                 </div>
                 
                 <div class="row mb-3">
@@ -187,19 +212,15 @@ $resultProdutos = mysqli_query($conn, $sqlProdutos);
                         <label for="data_venda" class="form-label">Data da Venda</label>
                         <input type="text" class="form-control" value="<?= $dataVenda; ?>" readonly>
                     </div>
-                
-                <div class="col-md-6">
+                    <div class="col-md-6">
                         <label for="valor" class="form-label">Valor</label>
                         <input type="text" class="form-control" id="valor" name="valor" value="<?= $valorFormatado; ?>" required>
                     </div>
-
-                    </div>
-                    <div class="mb-3">
-    <label for="observacao" class="form-label">Observação</label>
-    <textarea class="form-control" id="observacao" name="observacao" rows="4"><?= isset($venda['observacao']) ? htmlspecialchars($venda['observacao']) : ''; ?></textarea>
-</div>
-
-
+                </div>
+                <div class="mb-3">
+                    <label for="observacao" class="form-label">Observação</label>
+                    <textarea class="form-control" id="observacao" name="observacao" rows="4"><?= htmlspecialchars($observacao); ?></textarea>
+                </div>
 
                 <!-- Exibição dos produtos da venda -->
                 <h4 class="mb-3">Produtos da Venda</h4>
@@ -222,16 +243,17 @@ $resultProdutos = mysqli_query($conn, $sqlProdutos);
                     </tbody>
                 </table>
 
-                <!-- Botões lado a lado -->
+                <!-- Botão de atualizar -->
                 <div class="d-flex" style="gap: 10px;">
-                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
-                    <form method="POST" action="" onsubmit="return confirm('Tem certeza que deseja excluir esta venda?');">
-                        <button type="submit" name="delete" class="btn btn-danger">
-                            <i class="bi bi-trash"></i> Excluir Venda
-                        </button>
-                    </form>
+                    <button type="submit" name="update" class="btn btn-success">Salvar Alterações</button>
                 </div>
+            </form>
 
+            <!-- Formulário separado para exclusão -->
+            <form method="POST" action="" onsubmit="return confirm('Tem certeza que deseja excluir esta venda?');" class="mt-3">
+                <button type="submit" name="delete" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Excluir Venda
+                </button>
             </form>
         </div>
     </div>
